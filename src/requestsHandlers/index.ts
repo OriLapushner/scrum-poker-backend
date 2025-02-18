@@ -1,0 +1,85 @@
+import { createRoomRequestSchema, joinRoomRequestSchema, voteRequestSchema, ReconnectToRoomSchema } from '../dataSchemas/dataFromClient'
+import RoomsManager from '../entities/RoomsManager';
+import { Socket } from 'socket.io';
+
+const createRoomHandler = (socket: Socket, createRoomProps: CreateRoomProps, response: Function) => {
+	const { error } = createRoomRequestSchema.validate(createRoomProps);
+	if (error) return console.log('invalid props to create room request', error.message);
+	const room = RoomsManager.createRoom({ ...createRoomProps, socket });
+	response(room.id, room.guests[0].secretId);
+};
+
+const joinRoomHandler = (socket: Socket, joinRoomProps: JoinRoomProps, response: Function) => {
+	const { error } = joinRoomRequestSchema.validate(joinRoomProps);
+	if (error) return console.log('invalid props to join room request', error.message);
+	try {
+		const roomInfo = RoomsManager.addGuest({ ...joinRoomProps, socket });
+		response(roomInfo)
+	} catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
+};
+
+const reconnectToRoomHandler = (socket: Socket, reconnectToRoomProps: ReconnectToRoomProps, response: Function) => {
+	const { error } = ReconnectToRoomSchema.validate(reconnectToRoomProps);
+	if (error) return console.log('invalid props to join room request', error.message);
+	try {
+		const roomInfo = RoomsManager.reconnectGuest({ ...reconnectToRoomProps, socket });
+		response(roomInfo)
+	} catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
+}
+
+const voteHandler = (socket: Socket, voteValue: number) => {
+	const { error } = voteRequestSchema.validate(voteValue);
+	if (error) return console.log('invalid props to vote request', error.message);
+	RoomsManager.vote(socket, voteValue);
+};
+
+const leaveRoomHandler = (socket: Socket) => {
+	console.log(`socket with id ${socket.id} has disconnected`);
+	RoomsManager.removeGuest(socket);
+};
+
+const disconnectedHandler = (socket: Socket) => {
+	console.log(`socket with id ${socket.id} has disconnected`);
+	RoomsManager.disconnectGuest(socket);
+}
+
+const revealCards = (socket: Socket, _: undefined, response: Function) => {
+	console.log('revealCards')
+	try {
+		RoomsManager.revealCards(socket);
+		response({ error: null })
+	} catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
+};
+
+const startNewRound = (socket: Socket, _: undefined, response: Function) => {
+	console.log('startNewRound')
+	try {
+		RoomsManager.startNewRound(socket);
+		response({ error: null })
+	}
+	catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
+
+}
+
+export {
+	createRoomHandler,
+	joinRoomHandler,
+	leaveRoomHandler,
+	voteHandler,
+	revealCards,
+	startNewRound,
+	disconnectedHandler,
+	reconnectToRoomHandler
+}
