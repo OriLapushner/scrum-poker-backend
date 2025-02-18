@@ -72,7 +72,8 @@ class RoomsManager {
 		const room = this.findRoomBySocketId(socket.id);
 		if (!room) throw new Error(guestDoesNotExist());
 		// if (room.adminId !== socket.id) throw new Error('unallowed to reveal');
-		if (room.currentRound.length !== room.guests.length) throw new Error('not all guests voted');
+		const votingGuests = room.guests.filter(guest => guest.isInRound && guest.isConnected);
+		if (room.currentRound.length !== votingGuests.length) throw new Error('not all guests voted');
 		if (room.isRevealed) throw new Error('room is already revealed');
 		room.isRevealed = true;
 		this.io.to(room.id).except(socket.id).emit('cards_revealed');
