@@ -1,10 +1,5 @@
 import { uniqueSid } from '../../utils';
 import Guest from '../Guest';
-import { guestDoesNotExist } from './errors';
-
-export type Round = {
-	[guestId: string]: number;
-};
 
 class Room {
 	id: string;
@@ -27,29 +22,11 @@ class Room {
 		this.roomName = room.roomName
 	}
 
-	static create({ guestName, deck, socketId, roomName }: { guestName: string, deck: Deck, socketId: string, roomName: string }) {
-		const host = new Guest({ socketId, name: guestName, isInRound: true });
-		return new Room({ guests: [host], deck, adminId: socketId, roomName });
-	}
-
-	removeGuest(socketId: string) {
-		const guestToRemove = this.guests.find(guest => guest.socketId === socketId);
-		this.guests = this.guests.filter(guest => guest.socketId !== socketId);
-		return guestToRemove
-	}
-
-	getGuest({ socketId, guestId }: { socketId?: string, guestId?: string }) {
-		const guest = this.guests.find((roomGuest) => roomGuest.socketId === socketId || roomGuest.id === guestId);
-		if (!guest) {
-			throw new Error(guestDoesNotExist(socketId));
-		}
-		return guest;
-	}
-
 	createId() {
 		return uniqueSid();
 	}
 
 }
+
 
 export default Room;
