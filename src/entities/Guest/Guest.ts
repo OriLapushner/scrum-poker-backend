@@ -13,7 +13,6 @@ class Guest {
 	name: string;
 	socketId: string;
 	isConnected: boolean;
-	currentVote: number;
 	isInRound: boolean;
 
 	constructor(guest: GuestPayload) {

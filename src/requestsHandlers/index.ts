@@ -1,12 +1,16 @@
-import { createRoomRequestSchema, joinRoomRequestSchema, voteRequestSchema, ReconnectToRoomSchema } from '../dataSchemas/dataFromClient'
-import RoomsManager from '../entities/RoomsManager';
 import { Socket } from 'socket.io';
+import { createRoomRequestSchema, joinRoomRequestSchema, voteRequestSchema, reconnectToRoomSchema } from '../dataSchemas/dataFromClient'
+import RoomsManager from '../entities/RoomsManager';
 
 const createRoomHandler = (socket: Socket, createRoomProps: CreateRoomProps, response: Function) => {
 	const { error } = createRoomRequestSchema.validate(createRoomProps);
 	if (error) return console.log('invalid props to create room request', error.message);
-	const room = RoomsManager.createRoom({ ...createRoomProps, socket });
-	response(room.id, room.guests[0].secretId);
+	const { room, guest } = RoomsManager.createRoom({ ...createRoomProps, socket });
+	response({
+		roomId: room.id,
+		secretId: guest.secretId,
+		localGuestId: guest.id
+	});
 };
 
 const joinRoomHandler = (socket: Socket, joinRoomProps: JoinRoomProps, response: Function) => {
@@ -22,7 +26,7 @@ const joinRoomHandler = (socket: Socket, joinRoomProps: JoinRoomProps, response:
 };
 
 const reconnectToRoomHandler = (socket: Socket, reconnectToRoomProps: ReconnectToRoomProps, response: Function) => {
-	const { error } = ReconnectToRoomSchema.validate(reconnectToRoomProps);
+	const { error } = reconnectToRoomSchema.validate(reconnectToRoomProps);
 	if (error) return console.log('invalid props to join room request', error.message);
 	try {
 		const roomInfo = RoomsManager.reconnectGuest({ ...reconnectToRoomProps, socket });
@@ -81,5 +85,5 @@ export {
 	revealCards,
 	startNewRound,
 	disconnectedHandler,
-	reconnectToRoomHandler
+	reconnectToRoomHandler,
 }

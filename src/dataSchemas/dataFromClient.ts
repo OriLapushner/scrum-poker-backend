@@ -24,7 +24,7 @@ const joinRoomRequestSchema = Joi.object({
     roomId: Joi.string(),
 })
 
-const ReconnectToRoomSchema = Joi.object({
+const reconnectToRoomSchema = Joi.object({
     roomId: Joi.string(),
     secretId: Joi.string(),
 })
@@ -38,5 +38,5 @@ export {
     createRoomRequestSchema,
     joinRoomRequestSchema,
     voteRequestSchema,
-    ReconnectToRoomSchema
+    reconnectToRoomSchema,
 }

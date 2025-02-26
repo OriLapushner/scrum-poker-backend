@@ -32,10 +32,6 @@ class Room {
 		return new Room({ guests: [host], deck, adminId: socketId, roomName });
 	}
 
-	addGuest(guest: Guest) {
-		this.guests.push(guest);
-	}
-
 	removeGuest(socketId: string) {
 		const guestToRemove = this.guests.find(guest => guest.socketId === socketId);
 		this.guests = this.guests.filter(guest => guest.socketId !== socketId);

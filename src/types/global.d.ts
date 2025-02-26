@@ -39,7 +39,7 @@ declare global {
 
     type vote = {
         guestId: string,
-        voteValue: number
+        voteValue: number | null
     }
 
     type GameRound = vote[]
