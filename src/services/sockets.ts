@@ -21,5 +21,3 @@ class SocketService {
 }
 
 export default SocketService;
-
-// export default socketService;

@@ -24,6 +24,14 @@ const init = () => {
 	const io = socketService.init(server);
 	const { SERVER_PORT } = process.env;
 
+	app.get('/healthcheck', (req, res) => {
+		res.status(200).json({
+			status: 'ok',
+			uptime: process.uptime(),
+			timestamp: new Date().toISOString()
+		});
+	});
+
 	RoomsManager.init(io);
 	io.on('connection', (socket: Socket) => {
 		console.log(`⚡: ${socket.id} user just connected!`);
