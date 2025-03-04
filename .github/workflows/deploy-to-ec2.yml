@@ -81,7 +81,7 @@ jobs:
       run: |
         ssh ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "
           # Login to ECR
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          sudo aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
           
           # Pull the latest image
           sudo docker pull ${{ steps.image-details.outputs.image }}
