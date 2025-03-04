@@ -84,14 +84,14 @@ jobs:
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
           
           # Pull the latest image
-          docker pull ${{ steps.image-details.outputs.image }}
+          sudo docker pull ${{ steps.image-details.outputs.image }}
           
           # Stop and remove the existing container if it exists
-          docker stop ${{ env.CONTAINER_NAME }} || true
-          docker rm ${{ env.CONTAINER_NAME }} || true
+          sudo docker stop ${{ env.CONTAINER_NAME }} || true
+          sudo docker rm ${{ env.CONTAINER_NAME }} || true
           
           # Run the new container
-          docker run -d \
+          sudo docker run -d \
             --name ${{ env.CONTAINER_NAME }} \
             -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
             -e SERVER_PORT=${{ env.SERVER_PORT }} \
@@ -100,9 +100,9 @@ jobs:
             ${{ steps.image-details.outputs.image }}
           
           # Clean up unused images
-          docker image prune -af
+          sudo docker image prune -af
           
           # Verify deployment
           echo 'Deployment completed. Container status:'
-          docker ps | grep ${{ env.CONTAINER_NAME }}
+          sudo docker ps | grep ${{ env.CONTAINER_NAME }}
         "
