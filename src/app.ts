@@ -22,7 +22,7 @@ const init = () => {
 	const server = http.createServer(app);
 	const socketService = new SocketService();
 	const io = socketService.init(server);
-	const { SERVER_PORT } = process.env;
+	const { PORT } = process.env;
 
 	app.get('/healthcheck', (req, res) => {
 		res.status(200).json({
@@ -46,8 +46,8 @@ const init = () => {
 		socket.on('start_new_round', (props, response) => startNewRound(socket, props, response));
 	});
 
-	server.listen(SERVER_PORT, () => {
-		console.log(`server running on port ${SERVER_PORT}`);
+	server.listen(PORT, () => {
+		console.log(`server running on port ${PORT}`);
 	});
 };
 
