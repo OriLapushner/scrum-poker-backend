@@ -83,15 +83,6 @@ jobs:
             SSL_CERT_SECRET:${{ env.SSL_SECRET_NAME }}
           parse-json-secrets: true
 
-      - name: Prepare SSL certificate data
-        id: ssl-data
-        run: |
-          # Encode the certificate data to safely handle multiline values
-          echo "ssl_cert=$(echo '${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_certificate }}' | base64 -w 0)" >> $GITHUB_OUTPUT
-          echo "ssl_privkey=$(echo '${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_privkey }}' | base64 -w 0)" >> $GITHUB_OUTPUT
-          echo "ssl_fullchain=$(echo '${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_fullchain }}' | base64 -w 0)" >> $GITHUB_OUTPUT
-          echo "ssl_domain=${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_domain }}" >> $GITHUB_OUTPUT
-
       - name: Deploy to EC2
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -108,22 +99,16 @@ jobs:
             sudo docker stop ${{ env.CONTAINER_NAME }} || true
             sudo docker rm ${{ env.CONTAINER_NAME }} || true
             
-            # Decode SSL certificate data
-            SSL_CERT=\$(echo '${{ steps.ssl-data.outputs.ssl_cert }}' | base64 -d)
-            SSL_PRIVKEY=\$(echo '${{ steps.ssl-data.outputs.ssl_privkey }}' | base64 -d)
-            SSL_FULLCHAIN=\$(echo '${{ steps.ssl-data.outputs.ssl_fullchain }}' | base64 -d)
-            SSL_DOMAIN='${{ steps.ssl-data.outputs.ssl_domain }}'
-            
             # Run the new container
             sudo docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
               -e PORT=${{ env.SERVER_PORT }} \
               -e CORS_ORIGIN=${{ env.CORS_ORIGIN }} \
-              -e SSL_CERT=\"\$SSL_CERT\" \
-              -e SSL_PRIVKEY=\"\$SSL_PRIVKEY\" \
-              -e SSL_FULLCHAIN=\"\$SSL_FULLCHAIN\" \
-              -e SSL_DOMAIN=\"\$SSL_DOMAIN\" \
+              -e SSL_CERT='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_certificate }}' \
+              -e SSL_PRIVKEY='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_privkey }}' \
+              -e SSL_FULLCHAIN='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_fullchain }}' \
+              -e SSL_DOMAIN='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_domain }}' \
               -e SSL_ENABLED=true \
               --restart unless-stopped \
               ${{ steps.image-details.outputs.image }}
