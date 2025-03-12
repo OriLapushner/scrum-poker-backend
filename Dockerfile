@@ -1,15 +1,29 @@
-FROM node:20
+FROM node:22-alpine AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-EXPOSE ${SERVER_PORT}
+RUN npm prune --production
 
-CMD ["node", "dist/app.js"]
+
+FROM node:22-alpine AS production
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE ${PORT}
+
+CMD ["npm", "run", "start"]
