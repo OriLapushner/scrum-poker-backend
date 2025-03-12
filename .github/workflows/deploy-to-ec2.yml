@@ -77,10 +77,10 @@ jobs:
 
       - name: Retrieve SSL certificate from AWS Secrets Manager
         id: ssl-cert
-        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            SSL_CERT_SECRET=${{ env.SSL_SECRET_NAME }}
+            SSL_CERT_SECRET, ${{ env.SSL_SECRET_NAME }}
           parse-json-secrets: true
 
       - name: Deploy to EC2
