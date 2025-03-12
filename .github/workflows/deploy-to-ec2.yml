@@ -100,8 +100,7 @@ jobs:
             sudo docker rm ${{ env.CONTAINER_NAME }} || true
             
             # Run the new container
-            echo 'domain name from secret'
-            echo ${{env.SSL_CERT_DOMAIN}}
+            echo 'TEST --- domain name from secret ${{env.SSL_CERT_DOMAIN}}'
             sudo docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
