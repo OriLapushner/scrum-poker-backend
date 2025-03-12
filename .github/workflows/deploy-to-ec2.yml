@@ -105,10 +105,9 @@ jobs:
               -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
               -e PORT=${{ env.SERVER_PORT }} \
               -e CORS_ORIGIN=${{ env.CORS_ORIGIN }} \
-              -e SSL_CERT='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_certificate }}' \
-              -e SSL_PRIVKEY='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_privkey }}' \
-              -e SSL_FULLCHAIN='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_fullchain }}' \
-              -e SSL_DOMAIN='${{ steps.ssl-cert.outputs.SSL_CERT_SECRET_domain }}' \
+              -e SSL_CERT='${{ SSL_CERT_SECRET_certificate }}' \
+              -e SSL_PRIVKEY='${{ SSL_CERT_SECRET_privkey }}' \
+              -e SSL_FULLCHAIN='${{ SSL_CERT_SECRET_fullchain }}' \
               -e SSL_ENABLED=true \
               --restart unless-stopped \
               ${{ steps.image-details.outputs.image }}
