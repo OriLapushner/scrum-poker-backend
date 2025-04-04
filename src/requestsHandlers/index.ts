@@ -18,7 +18,15 @@ const joinRoomHandler = (socket: Socket, joinRoomProps: JoinRoomProps, response:
 	if (error) return console.log('invalid props to join room request', error.message);
 	try {
 		const roomInfo = RoomsManager.addGuest({ ...joinRoomProps, socket });
-		response(roomInfo)
+		response({
+			isReaveled: roomInfo.isReaveled,
+			roomName: roomInfo.roomName,
+			deck: roomInfo.deck,
+			guests: roomInfo.guests,
+			localGuestId: roomInfo.localGuestId,
+			currentRound: roomInfo.currentRound,
+			previousRounds: roomInfo.previousRounds,
+		})
 	} catch (error) {
 		response({ error: error.message });
 		console.log(error.message);

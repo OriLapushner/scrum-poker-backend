@@ -35,7 +35,6 @@ class RoomsManager {
 
 		socket.join(roomId);
 		return {
-			room,
 			deck,
 			guests: guestsWithoutSecretId,
 			currentRound,
