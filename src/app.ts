@@ -7,7 +7,6 @@ import SocketService from './services/sockets';
 import {
 	createRoomHandler,
 	joinRoomHandler,
-	leaveRoomHandler,
 	voteHandler,
 	revealCards,
 	startNewRound,
@@ -57,7 +56,6 @@ const init = () => {
 		socket.on('join_room', (props, response) => joinRoomHandler(socket, props, response));
 		socket.on('rejoin_room', (props, response) => reconnectToRoomHandler(socket, props, response));
 		socket.on('disconnect', () => disconnectedHandler(socket));
-		socket.on('leaveRoom', () => leaveRoomHandler(socket));
 		socket.on('vote', (props) => voteHandler(socket, props));
 		socket.on('reveal_cards', (props, response) => revealCards(socket, props, response));
 		socket.on('start_new_round', (props, response) => startNewRound(socket, props, response));

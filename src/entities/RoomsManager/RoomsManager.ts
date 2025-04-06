@@ -46,15 +46,6 @@ class RoomsManager {
 		};
 	}
 
-	static removeGuest(socket: Socket) {
-		const room = RoomsManager.findRoomBySocketId(socket.id);
-		if (!room) return console.log('guest does not exist in any room');
-		const removedGuest = room.guests.find(guest => guest.socketId === socket.id);
-		room.guests = room.guests.filter(guest => guest.socketId !== socket.id);
-		if (room.guests.length === 0) return this.rooms = this.rooms.filter(filterRoom => filterRoom.id !== room.id);
-		this.io.to(room.id).emit('guest_left', removedGuest.id);
-	}
-
 	static setCloseRoomTimeout(roomId: string) {
 		setTimeout(() => {
 			const room = this.rooms.find(room => room.id === roomId);
@@ -70,7 +61,7 @@ class RoomsManager {
 		if (room.deck.cards.length - 1 < voteValue) return console.log('vote value is out of boundries');
 		if (room.isRevealed) return console.log('can\'t vote when revealed')
 
-		const votingGuest = room.guests.find(guest => guest.socketId === socket.id);
+		const votingGuest = room.guests.find(guest => guest.socketIds.includes(socket.id));
 		if (!votingGuest.isInRound) return console.log('guest is not in round');
 
 		const vote = room.currentRound.find(vote => vote.guestId === votingGuest.id)
@@ -96,8 +87,10 @@ class RoomsManager {
 		room.currentRound = [];
 		room.guests.forEach(guest => {
 			// currently automatically add guest to round if he is connected on a new round
-			if (guest.isConnected) guest.isInRound = true
-			room.currentRound.push({ guestId: guest.id, voteValue: null });
+			if (guest.isConnected) {
+				guest.isInRound = true
+				room.currentRound.push({ guestId: guest.id, voteValue: null });
+			}
 		});
 
 		room.isRevealed = false;
@@ -107,11 +100,13 @@ class RoomsManager {
 	static disconnectGuest(socket: Socket) {
 		const room = this.findRoomBySocketId(socket.id);
 		if (!room) return console.log('guest does not exist in any room');
-		const guest = room.guests.find(guest => guest.socketId === socket.id);
+		const guest = room.guests.find(guest => guest.socketIds.includes(socket.id));
 		if (!guest) return console.log('guest does not exist in any room');
 		guest.isConnected = false;
 		guest.isInRound = false;
+		guest.socketIds = guest.socketIds.filter(socketId => socketId !== socket.id);
 		room.currentRound = room.currentRound.filter(vote => vote.guestId !== guest.id);
+		console.log('guest disconnected', guest.id, guest.name);
 		this.io.to(room.id).emit('guest_disconnected', guest.id);
 	}
 
@@ -123,24 +118,33 @@ class RoomsManager {
 
 		guest.isInRound = !room.isRevealed;
 		guest.isConnected = true;
-		guest.socketId = socket.id;
-		if (guest.isInRound) room.currentRound.push({ guestId: guest.id, voteValue: null });
-		const filteredGuests = room.guests.filter(guest => guest.socketId !== socket.id);
-		this.io.to(roomId).except(socket.id).emit('guest_reconnected', guest.id);
+		if (!room.currentRound.some(vote => vote.guestId === guest.id)) {
+			room.currentRound.push({ guestId: guest.id, voteValue: null });
+		}
+		guest.socketIds.push(socket.id);
+		socket.join(roomId);
 
+		const filteredGuests = room.guests.filter(guest => guest.socketIds.includes(socket.id));
+		this.io.to(roomId).except(socket.id).emit('guest_reconnected', guest.id);
 		return {
+			localGuest: {
+				id: guest.id,
+				name: guest.name,
+				isInRound: guest.isInRound,
+				isConnected: guest.isConnected,
+				secretId: guest.secretId
+			},
 			deck: room.deck,
 			guests: filteredGuests,
 			currentRound: room.currentRound,
 			roomName: room.roomName,
 			isReaveled: room.isRevealed,
-			secretId: guest.secretId,
 			previousRounds: room.previousRounds
 		};
 
 	}
 	private static findRoomBySocketId(socketId: string) {
-		return RoomsManager.rooms.find(room => room.guests.find(guest => guest.socketId === socketId));
+		return RoomsManager.rooms.find(room => room.guests.find(guest => guest.socketIds.includes(socketId)));
 	}
 
 }

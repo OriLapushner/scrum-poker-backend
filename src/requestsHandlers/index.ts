@@ -19,6 +19,7 @@ const joinRoomHandler = (socket: Socket, joinRoomProps: JoinRoomProps, response:
 	try {
 		const roomInfo = RoomsManager.addGuest({ ...joinRoomProps, socket });
 		response({
+			secretId: roomInfo.secretId,
 			isReaveled: roomInfo.isReaveled,
 			roomName: roomInfo.roomName,
 			deck: roomInfo.deck,
@@ -38,7 +39,16 @@ const reconnectToRoomHandler = (socket: Socket, reconnectToRoomProps: ReconnectT
 	if (error) return console.log('invalid props to join room request', error.message);
 	try {
 		const roomInfo = RoomsManager.reconnectGuest({ ...reconnectToRoomProps, socket });
-		response(roomInfo)
+		const filteredGuests = roomInfo.guests.filter(guest => guest.id !== roomInfo.localGuest.id);
+		response({
+			localGuest: roomInfo.localGuest,
+			isReaveled: roomInfo.isReaveled,
+			roomName: roomInfo.roomName,
+			deck: roomInfo.deck,
+			guests: filteredGuests,
+			currentRound: roomInfo.currentRound,
+			previousRounds: roomInfo.previousRounds,
+		})
 	} catch (error) {
 		response({ error: error.message });
 		console.log(error.message);
@@ -49,11 +59,6 @@ const voteHandler = (socket: Socket, voteValue: number) => {
 	const { error } = voteRequestSchema.validate(voteValue);
 	if (error) return console.log('invalid props to vote request', error.message);
 	RoomsManager.vote(socket, voteValue);
-};
-
-const leaveRoomHandler = (socket: Socket) => {
-	console.log(`socket with id ${socket.id} has disconnected`);
-	RoomsManager.removeGuest(socket);
 };
 
 const disconnectedHandler = (socket: Socket) => {
@@ -88,7 +93,6 @@ const startNewRound = (socket: Socket, _: undefined, response: Function) => {
 export {
 	createRoomHandler,
 	joinRoomHandler,
-	leaveRoomHandler,
 	voteHandler,
 	revealCards,
 	startNewRound,

@@ -11,7 +11,7 @@ class Guest {
 	secretId: string;
 	id: string;
 	name: string;
-	socketId: string;
+	socketIds: string[];
 	isConnected: boolean;
 	isInRound: boolean;
 
@@ -19,7 +19,7 @@ class Guest {
 		this.id = guest.id || this.createId();
 		this.secretId = this.createId();
 		this.name = guest.name;
-		this.socketId = guest.socketId;
+		this.socketIds = [guest.socketId];
 		this.isConnected = true;
 		this.isInRound = guest.isInRound;
 	}
