@@ -59,7 +59,6 @@ class RoomsManager {
 		const room = RoomsManager.findRoomBySocketId(socket.id);
 		if (!room) return console.log('guest does not exist in any room');
 		if (room.deck.cards.length - 1 < voteValue) return console.log('vote value is out of boundries');
-		if (room.isRevealed) return console.log('can\'t vote when revealed')
 
 		const votingGuest = room.guests.find(guest => guest.socketIds.includes(socket.id));
 		if (!votingGuest.isInRound) return console.log('guest is not in round');
