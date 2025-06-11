@@ -14,6 +14,7 @@ class Guest {
 	socketIds: string[];
 	isConnected: boolean;
 	isInRound: boolean;
+	isSpectator: boolean;
 
 	constructor(guest: GuestPayload) {
 		this.id = guest.id || this.createId();
@@ -22,6 +23,7 @@ class Guest {
 		this.socketIds = [guest.socketId];
 		this.isConnected = true;
 		this.isInRound = guest.isInRound;
+		this.isSpectator = false;
 	}
 
 	createId() {

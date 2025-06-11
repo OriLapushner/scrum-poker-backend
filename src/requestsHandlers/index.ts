@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { createRoomRequestSchema, joinRoomRequestSchema, voteRequestSchema, reconnectToRoomSchema } from '../dataSchemas/dataFromClient'
+import { createRoomRequestSchema, joinRoomRequestSchema, voteRequestSchema, reconnectToRoomSchema, setGuestSpectatorStatusRequestSchema, setGuestNameRequestSchema } from '../dataSchemas/dataFromClient'
 import RoomsManager from '../entities/RoomsManager';
 
 const createRoomHandler = (socket: Socket, createRoomProps: CreateRoomProps, response: Function) => {
@@ -39,13 +39,12 @@ const reconnectToRoomHandler = (socket: Socket, reconnectToRoomProps: ReconnectT
 	if (error) return console.log('invalid props to join room request', error.message);
 	try {
 		const roomInfo = RoomsManager.reconnectGuest({ ...reconnectToRoomProps, socket });
-		const filteredGuests = roomInfo.guests.filter(guest => guest.id !== roomInfo.localGuest.id);
 		response({
 			localGuest: roomInfo.localGuest,
 			isReaveled: roomInfo.isReaveled,
 			roomName: roomInfo.roomName,
 			deck: roomInfo.deck,
-			guests: filteredGuests,
+			guests: roomInfo.guests,
 			currentRound: roomInfo.currentRound,
 			previousRounds: roomInfo.previousRounds,
 		})
@@ -55,10 +54,16 @@ const reconnectToRoomHandler = (socket: Socket, reconnectToRoomProps: ReconnectT
 	}
 }
 
-const voteHandler = (socket: Socket, voteValue: number) => {
+const voteHandler = (socket: Socket, voteValue: number, response: Function) => {
 	const { error } = voteRequestSchema.validate(voteValue);
 	if (error) return console.log('invalid props to vote request', error.message);
-	RoomsManager.vote(socket, voteValue);
+	try {
+		RoomsManager.vote(socket, voteValue);
+		response({ error: null })
+	} catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
 };
 
 const disconnectedHandler = (socket: Socket) => {
@@ -87,7 +92,28 @@ const startNewRound = (socket: Socket, _: undefined, response: Function) => {
 		response({ error: error.message });
 		console.log(error.message);
 	}
+}
 
+const setGuestSpectatorStatus = (socket: Socket, isSpectator: boolean, response: Function) => {
+	const { error } = setGuestSpectatorStatusRequestSchema.validate(isSpectator);
+	if (error) return response({ error: error.message });
+	try {
+		RoomsManager.setGuestSpectatorStatus(socket, isSpectator);
+		response({ error: null })
+	} catch (error) { response({ error: error.message }); console.log(error.message); }
+}
+
+const setGuestName = (socket: Socket, guestName: string, response: Function) => {
+	const { error } = setGuestNameRequestSchema.validate(guestName);
+	if (error) return response({ error: error.message });
+	try {
+		RoomsManager.setGuestName(socket, guestName);
+		response({ error: null })
+	}
+	catch (error) {
+		response({ error: error.message });
+		console.log(error.message);
+	}
 }
 
 export {
@@ -98,4 +124,6 @@ export {
 	startNewRound,
 	disconnectedHandler,
 	reconnectToRoomHandler,
+	setGuestSpectatorStatus,
+	setGuestName
 }

@@ -11,6 +11,8 @@ import {
 	revealCards,
 	startNewRound,
 	disconnectedHandler,
+	setGuestSpectatorStatus,
+	setGuestName,
 	reconnectToRoomHandler
 } from './requestsHandlers'
 import RoomsManager from './entities/RoomsManager'
@@ -56,9 +58,11 @@ const init = () => {
 		socket.on('join_room', (props, response) => joinRoomHandler(socket, props, response));
 		socket.on('rejoin_room', (props, response) => reconnectToRoomHandler(socket, props, response));
 		socket.on('disconnect', () => disconnectedHandler(socket));
-		socket.on('vote', (props) => voteHandler(socket, props));
+		socket.on('vote', (props, response) => voteHandler(socket, props, response));
 		socket.on('reveal_cards', (props, response) => revealCards(socket, props, response));
 		socket.on('start_new_round', (props, response) => startNewRound(socket, props, response));
+		socket.on('set_guest_spectator_status', (props, response) => setGuestSpectatorStatus(socket, props, response));
+		socket.on('set_guest_name', (props, response) => setGuestName(socket, props, response));
 	});
 
 	server.listen(PORT, () => {

@@ -117,13 +117,12 @@ class RoomsManager {
 
 		guest.isInRound = !room.isRevealed;
 		guest.isConnected = true;
-		if (!room.currentRound.some(vote => vote.guestId === guest.id)) {
+		if (!room.currentRound.some(vote => vote.guestId === guest.id) && !room.isRevealed) {
 			room.currentRound.push({ guestId: guest.id, voteValue: null });
 		}
 		guest.socketIds.push(socket.id);
 		socket.join(roomId);
-
-		const filteredGuests = room.guests.filter(guest => guest.socketIds.includes(socket.id));
+		const filteredGuests = room.guests.filter(guest => !guest.socketIds.includes(socket.id));
 		this.io.to(roomId).except(socket.id).emit('guest_reconnected', guest.id);
 		return {
 			localGuest: {
@@ -146,6 +145,32 @@ class RoomsManager {
 		return RoomsManager.rooms.find(room => room.guests.find(guest => guest.socketIds.includes(socketId)));
 	}
 
+	static setGuestSpectatorStatus(socket: Socket, isSpectator: boolean) {
+		const room = this.findRoomBySocketId(socket.id);
+		if (!room) throw new Error(guestDoesNotExist());
+		const guest = room.guests.find(guest => guest.socketIds.includes(socket.id));
+		if (!guest) throw new Error(guestDoesNotExist());
+
+		guest.isSpectator = isSpectator;
+		if (isSpectator) {
+			room.currentRound = room.currentRound.filter(vote => vote.guestId !== guest.id);
+		}
+		if (isSpectator === false && !room.currentRound.some(vote => vote.guestId === guest.id)) {
+			room.currentRound.push({ guestId: guest.id, voteValue: null });
+		}
+		const guestChanges = { id: guest.id, isSpectator }
+
+		this.io.to(room.id).except(socket.id).emit('guest_changed', guestChanges);
+	}
+
+	static setGuestName(socket: Socket, guestName: string) {
+		const room = this.findRoomBySocketId(socket.id);
+		if (!room) throw new Error(guestDoesNotExist());
+		const guest = room.guests.find(guest => guest.socketIds.includes(socket.id));
+		if (!guest) throw new Error(guestDoesNotExist());
+		guest.name = guestName;
+		this.io.to(room.id).except(socket.id).emit('guest_changed', { id: guest.id, name: guestName });
+	}
 }
 
 export default RoomsManager

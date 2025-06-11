@@ -31,6 +31,10 @@ const reconnectToRoomSchema = Joi.object({
 
 const voteRequestSchema = Joi.number().min(0).allow(null);
 
+const setGuestSpectatorStatusRequestSchema = Joi.boolean();
+
+const setGuestNameRequestSchema = guestNameSchema
+
 
 export {
     cardsSchema,
@@ -39,4 +43,6 @@ export {
     joinRoomRequestSchema,
     voteRequestSchema,
     reconnectToRoomSchema,
+    setGuestSpectatorStatusRequestSchema,
+    setGuestNameRequestSchema,
 }

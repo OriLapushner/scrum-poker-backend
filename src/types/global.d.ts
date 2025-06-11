@@ -13,13 +13,6 @@ declare global {
         cards: Card[]
     }
 
-    type Guest = {
-        name: string,
-        id: number,
-        votedCardIdx: null | number,
-        isConnected: boolean
-    }
-
     type CreateRoomProps = {
         deck: Deck,
         guestName: string
