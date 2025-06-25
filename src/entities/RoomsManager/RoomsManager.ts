@@ -98,15 +98,15 @@ class RoomsManager {
 
 	static disconnectGuest(socket: Socket) {
 		const room = this.findRoomBySocketId(socket.id);
-		if (!room) return console.log('guest does not exist in any room');
+		if (!room) throw new Error(guestDoesNotExist())
 		const guest = room.guests.find(guest => guest.socketIds.includes(socket.id));
-		if (!guest) return console.log('guest does not exist in any room');
+		if (!guest) throw new Error(guestDoesNotExist())
 		guest.isConnected = false;
 		guest.isInRound = false;
+		guest.isSpectator = false;
 		guest.socketIds = guest.socketIds.filter(socketId => socketId !== socket.id);
 		room.currentRound = room.currentRound.filter(vote => vote.guestId !== guest.id);
-		console.log('guest disconnected', guest.id, guest.name);
-		this.io.to(room.id).emit('guest_disconnected', guest.id);
+		if (guest.socketIds.length === 0) this.io.to(room.id).emit('guest_disconnected', guest.id);
 	}
 
 	static reconnectGuest({ roomId, secretId, socket }: { roomId: string, secretId: string, socket: Socket }) {
