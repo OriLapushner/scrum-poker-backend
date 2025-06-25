@@ -35,6 +35,9 @@ const setGuestSpectatorStatusRequestSchema = Joi.boolean();
 
 const setGuestNameRequestSchema = guestNameSchema
 
+// Schema to validate that response is a function
+const responseSchema = Joi.func().required();
+
 
 export {
     cardsSchema,
@@ -45,4 +48,5 @@ export {
     reconnectToRoomSchema,
     setGuestSpectatorStatusRequestSchema,
     setGuestNameRequestSchema,
+    responseSchema,
 }
