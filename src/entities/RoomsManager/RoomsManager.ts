@@ -57,11 +57,12 @@ class RoomsManager {
 
 	static vote(socket: Socket, voteValue: number | null) {
 		const room = RoomsManager.findRoomBySocketId(socket.id);
-		if (!room) return console.log('guest does not exist in any room');
+		if (!room) throw new Error(guestDoesNotExist())
 		if (room.deck.cards.length - 1 < voteValue) return console.log('vote value is out of boundries');
 
 		const votingGuest = room.guests.find(guest => guest.socketIds.includes(socket.id));
-		if (!votingGuest.isInRound) return console.log('guest is not in round');
+		if (!votingGuest.isInRound) throw new Error('guest is not in round');
+		if (votingGuest.isSpectator) throw new Error('guest is spectator');
 
 		const vote = room.currentRound.find(vote => vote.guestId === votingGuest.id)
 		vote.voteValue = voteValue;
