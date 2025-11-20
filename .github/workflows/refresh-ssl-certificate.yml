@@ -1,0 +1,64 @@
+name: Refresh SSL Certificate
+
+on:
+  schedule:
+    # Run every 3 months (1st day of Jan, Apr, Jul, Oct at 00:00 UTC)
+    - cron: '0 0 1 */3 *'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  LAMBDA_FUNCTION_NAME: ${{ secrets.SSL_REFRESH_LAMBDA_FUNCTION_NAME }}
+
+jobs:
+  refresh-ssl:
+    name: Refresh SSL Certificate and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Invoke Lambda to refresh SSL certificate
+        run: |
+          echo "Invoking Lambda function to refresh SSL certificate..."
+          aws lambda invoke \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --invocation-type RequestResponse \
+            --region ${{ env.AWS_REGION }} \
+            response.json
+
+          echo "Lambda response:"
+          cat response.json
+
+          # Check if Lambda execution was successful
+          if grep -q "errorMessage" response.json; then
+            echo "Error: Lambda function failed"
+            cat response.json
+            exit 1
+          fi
+
+          echo "SSL certificate refresh completed successfully"
+
+      - name: Trigger deployment workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const result = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-to-ec2.yml',
+              ref: 'master'
+            });
+            console.log('Deployment workflow triggered successfully');
