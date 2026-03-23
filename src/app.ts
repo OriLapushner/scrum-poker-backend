@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
 import express from 'express';
 import http from 'http';
-import https from 'https';
 import cors from 'cors';
 import SocketService from './services/sockets';
 import {
@@ -16,28 +14,13 @@ import {
 	reconnectToRoomHandler
 } from './requestsHandlers'
 import RoomsManager from './entities/RoomsManager'
-dotenv.config();
 
 const init = () => {
 	const app = express();
 	app.use(cors());
 
-	const { PORT, SSL_ENABLED, SSL_CERT, SSL_PRIVKEY, SSL_FULLCHAIN } = process.env;
-	let server;
-
-	if (SSL_ENABLED === 'true' && SSL_CERT && SSL_PRIVKEY && SSL_FULLCHAIN) {
-		const sslOptions = {
-			cert: SSL_CERT,
-			key: SSL_PRIVKEY,
-			ca: SSL_FULLCHAIN
-		};
-
-		server = https.createServer(sslOptions, app);
-		console.log('Server running in HTTPS mode');
-	} else {
-		server = http.createServer(app);
-		console.log('Server running in HTTP mode');
-	}
+	const { PORT } = process.env;
+	const server = http.createServer(app);
 
 	const socketService = new SocketService();
 	const io = socketService.init(server);

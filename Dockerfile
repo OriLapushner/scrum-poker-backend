@@ -1,29 +1,28 @@
-FROM node:22-alpine AS builder
+FROM oven/bun:1.3.10-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json bun.lock* ./
 
-RUN npm ci
+RUN bun install --frozen-lockfile || bun install
 
 COPY . .
 
-RUN npm run build
+RUN bun run build
 
-RUN npm prune --production
+RUN bun install --production --frozen-lockfile || bun install --production
 
 
-FROM node:22-alpine AS production
+FROM oven/bun:1.3.10-alpine AS production
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
-
+COPY package.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE ${PORT}
 
-CMD ["npm", "run", "start"]
+CMD ["bun", "dist/app.js"]
